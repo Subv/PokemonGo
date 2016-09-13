@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">PokemonGo</string>
+    <string name="title_activity_overworld">Map</string>
+</resources>
