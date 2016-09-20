@@ -17,10 +17,16 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-public class OverworldActivity extends FragmentActivity implements OnMapReadyCallback {
+import java.util.List;
+
+import pokemon.PokemonTemplate;
+
+public class OverworldActivity extends FragmentActivity implements
+        OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
 
     private GoogleMap map;
     private Marker selfMarker;
+    private Marker[] pokeMarkers;
     private Object lock = new Object();
     private LocationManager locationManager;
 
@@ -44,6 +50,9 @@ public class OverworldActivity extends FragmentActivity implements OnMapReadyCal
         locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, LOCATION_REFRESH_TIME,
                 LOCATION_REFRESH_DISTANCE, locationListener);
 
+        // Populate the template database if it doesn't already exist.
+        PokemonTemplate.PopulateTemplates();
+
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
@@ -65,12 +74,27 @@ public class OverworldActivity extends FragmentActivity implements OnMapReadyCal
         synchronized(lock) {
             map = googleMap;
             map.getUiSettings().setMapToolbarEnabled(false);
+            map.setOnMarkerClickListener(this);
         }
     }
+
+    @Override
+    public boolean onMarkerClick(final Marker marker) {
+        // TODO: Initiate a battle
+        // Delete the location from the database
+        pokemon.Location loc = (pokemon.Location)marker.getTag();
+        loc.delete();
+        // Remove the marker
+        marker.remove();
+        return true;
+    }
+
 
     private final LocationListener locationListener = new LocationListener() {
         @Override
         public void onLocationChanged(final Location location) {
+            pokemon.Location.PopulateLocations(map, location.getLatitude(), location.getLongitude());
+
             LatLng position = new LatLng(location.getLatitude(), location.getLongitude());
             synchronized (lock) {
                 if (selfMarker == null) {
